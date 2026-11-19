@@ -1,4 +1,4 @@
-# Vagrantfile — two-tier PKI lab on the Packer-built Rocky Linux 8.10 box
+# Vagrantfile — two-tier PKI lab on the Packer-built Rocky Linux 8 box
 #
 #   root-ca     offline root CA (keep halted except when signing)
 #   issuing-ca  intermediate / issuing CA
@@ -6,8 +6,9 @@
 #
 # All three share a private libvirt network (ca-lab) with static IPs and
 # /etc/hosts entries, so they can reach each other as <name>.lab.test.
+# Provisioning is Ansible (provision/site.yml) using the shared roles in ../../ansible/roles.
 
-BOX    = "local/rocky-8.10"
+BOX    = "local/rocky-8"
 DOMAIN = "lab.test" # .test is reserved for testing (RFC 2606), never real DNS
 
 NODES = {
@@ -15,8 +16,6 @@ NODES = {
   "issuing-ca" => "192.168.150.11",
   "client"     => "192.168.150.12",
 }
-
-HOSTS = NODES.map { |name, ip| "#{ip} #{name}.#{DOMAIN} #{name}" }.join("\n")
 
 Vagrant.configure("2") do |config|
   config.vm.box = BOX
@@ -40,12 +39,15 @@ Vagrant.configure("2") do |config|
         ip: ip,
         libvirt__network_name: "ca-lab"
 
-      node.vm.provision "shell", inline: <<-SHELL
-        # Replace any lab.test lines (incl. Vagrant's 127.0.1.1 entry) with the real IPs
-        sed -i '/#{DOMAIN}/d' /etc/hosts
-        echo "#{HOSTS}" >> /etc/hosts
-        rm -f /etc/motd.d/cockpit
-      SHELL
+      # Runs per machine; lab_base_ip for every host is in the generated inventory,
+      # so each VM gets the full /etc/hosts even when brought up alone.
+      node.vm.provision "ansible" do |ansible|
+        ansible.playbook    = "provision/site.yml"
+        ansible.config_file = "../../ansible.cfg"
+        ansible.host_vars   = NODES.to_h { |n, i| [n, { "lab_base_ip" => i }] }
+        ansible.groups      = { "ca" => ["root-ca", "issuing-ca"], "web" => ["client"] }
+        ansible.extra_vars  = { "lab_base_domain" => DOMAIN }
+      end
     end
   end
 end

@@ -26,7 +26,7 @@ jobs:
       - name: Run pre-commit
         uses: pre-commit/action@v3.0.1
 
-  packer-validate:
+  validate:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
@@ -37,6 +37,14 @@ jobs:
         with:
           version: latest
 
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.x"
+
+      - name: Install Ansible
+        run: pip install ansible-core
+
       # Builds need KVM and multi-GB downloads, so CI only checks syntax/config.
-      - name: Validate Packer templates and Vagrantfiles
+      - name: Validate Packer templates, Vagrantfiles, and playbooks
         run: make validate

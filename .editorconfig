@@ -16,7 +16,7 @@ indent_style = tab
 indent_style = tab
 trim_trailing_whitespace = false
 
-[*.{yml,yaml,json}]
+[*.{yml,yaml,json,j2}]
 indent_style = space
 indent_size = 2
 

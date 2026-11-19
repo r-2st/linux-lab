@@ -78,6 +78,7 @@ $RECYCLE.BIN/
 # End of https://www.toptal.com/developers/gitignore/api/macos,windows,linux
 ### Packer ###
 # Build outputs and caches
+packer/output/
 output-*/
 packer_cache/
 crash.log
@@ -89,6 +90,10 @@ crash.log
 ### Vagrant ###
 .vagrant/
 *.box
+
+### Ansible ###
+*.retry
+.ansible/
 
 ### VM / disk images ###
 *.qcow2

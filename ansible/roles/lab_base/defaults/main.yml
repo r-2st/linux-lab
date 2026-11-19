@@ -1,0 +1,5 @@
+---
+# DNS domain for lab hosts; .test is reserved for testing (RFC 2606)
+lab_base_domain: lab.test
+# Each host's address on the lab network; Vagrant sets it per host via host_vars.
+lab_base_ip: ""

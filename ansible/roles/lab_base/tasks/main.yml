@@ -1,0 +1,22 @@
+---
+# Vagrant maps the hostname to a loopback address; drop that so the FQDN
+# resolves to the lab network address below.
+- name: Remove loopback entries for the lab hostname
+  ansible.builtin.lineinfile:
+    path: /etc/hosts
+    regexp: '^127\.0\.[01]\.1\s+{{ inventory_hostname }}\.{{ lab_base_domain | regex_escape }}\b'
+    state: absent
+
+- name: Add every lab host to /etc/hosts
+  ansible.builtin.blockinfile:
+    path: /etc/hosts
+    marker: "# {mark} lab hosts (managed by Ansible)"
+    block: |
+      {% for host in groups['all'] | sort %}
+      {{ hostvars[host].lab_base_ip }} {{ host }}.{{ lab_base_domain }} {{ host }}
+      {% endfor %}
+
+- name: Remove the cockpit login banner
+  ansible.builtin.file:
+    path: /etc/motd.d/cockpit
+    state: absent

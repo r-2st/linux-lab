@@ -1,33 +1,67 @@
 # linux-lab
 
-Hands-on labs for Linux distros and related tech, built with [Packer](https://developer.hashicorp.com/packer)
-and run with [Vagrant](https://developer.hashicorp.com/vagrant) on libvirt/KVM.
+Hands-on labs for Linux distros and related tech, built with [Packer](https://developer.hashicorp.com/packer),
+run with [Vagrant](https://developer.hashicorp.com/vagrant) on libvirt/KVM, and configured with
+[Ansible](https://docs.ansible.com/).
 
-Packer turns an upstream cloud image into a Vagrant box; each lab is a directory with a
-`Vagrantfile` that spins up one or more VMs from that box.
+Packer turns an upstream cloud image into a Vagrant box (one template, one var file per distro).
+Each lab is a directory under `labs/` with a `Vagrantfile` that builds VMs from those boxes and
+an Ansible playbook that configures them.
 
 ## Layout
 
 ```text
 .
-├── cert-lab/                       # Two-tier PKI lab (root CA, issuing CA, client)
-│   ├── rocky8-vagrant-box.pkr.hcl  # Builds rocky-8.10-libvirt.box from the GenericCloud image
-│   ├── qemu-readiness.pkr.hcl      # Smoke test for the local Packer + QEMU/KVM setup
-│   └── Vagrantfile                 # The lab VMs
-├── .github/workflows/validate.yml  # CI: pre-commit + packer validate
-├── Makefile                        # Entry point for everything below
-└── VERSION / CHANGELOG.md
+├── packer/
+│   ├── vagrant-box.pkr.hcl         # One template for every box
+│   ├── vars/<box>.pkrvars.hcl      # Per-distro image URL + checksum
+│   ├── scripts/                    # Provisioning run inside the image (network, python, cleanup)
+│   ├── readiness/                  # Smoke test for the local Packer + QEMU/KVM setup
+│   └── output/                     # Build output (gitignored)
+├── boxes/                          # Built *.box files (gitignored)
+├── ansible.cfg                     # Shared Ansible config; roles_path = ansible/roles
+├── ansible/roles/lab_base/         # Baseline for every lab VM (/etc/hosts, banners)
+├── labs/
+│   └── cert-lab/                   # Two-tier PKI lab, see its README
+│       ├── Vagrantfile
+│       └── provision/site.yml
+├── .github/workflows/validate.yml  # CI: pre-commit + make validate
+└── Makefile                        # Entry point for everything below
 ```
 
-New labs get their own top-level directory with a `Vagrantfile` and any Packer templates or
-provisioning scripts they need.
+## Boxes
+
+| `BOX=` | Distro | Source image |
+| --- | --- | --- |
+| `rocky-8` | Rocky Linux 8.10 (pinned build) | GenericCloud-Base |
+| `rocky-9` | Rocky Linux 9 (latest) | GenericCloud-Base |
+| `rocky-10` | Rocky Linux 10 (latest) | GenericCloud-Base |
+| `alma-9` | AlmaLinux 9 (latest) | GenericCloud |
+| `alma-10` | AlmaLinux 10 (latest) | GenericCloud |
+| `debian-12` | Debian 12 bookworm | genericcloud |
+| `debian-13` | Debian 13 trixie | genericcloud |
+| `ubuntu-24.04` | Ubuntu 24.04 LTS noble | server cloudimg |
+| `ubuntu-26.04` | Ubuntu 26.04 LTS resolute | server cloudimg |
+
+Every box has:
+
+- a `vagrant` user (password `vagrant`, passwordless sudo); Vagrant swaps in its own key on first `up`
+- DHCP on `eth0` (traditional NIC names, so it works no matter which PCI slot libvirt picks)
+- cloud-init disabled after the build, and an empty `machine-id` so each VM gets its own
+- Python 3.9+ as `python3` for Ansible (EL8 gets `python3.12`, since its 3.6 is too old)
+
+To add a distro, drop a new `packer/vars/<box>.pkrvars.hcl` with `name`, `image_url`, and
+`image_checksum`; `make validate` and `make box BOX=<box>` pick it up automatically.
+
+**EL10 (Rocky/Alma 10) needs an x86-64-v3 CPU.** The Packer build passes `-cpu host`; in a
+Vagrantfile set `lv.cpu_mode = "host-passthrough"` (or `host-model`) for those boxes.
 
 ## Prerequisites
 
 Fedora example (adjust for your distro):
 
 ```sh
-sudo dnf install -y @virtualization xorriso make ruby
+sudo dnf install -y @virtualization xorriso make ruby ansible-core
 sudo dnf install -y packer vagrant      # from the HashiCorp repo
 vagrant plugin install vagrant-libvirt
 sudo usermod -aG libvirt "$USER"        # log out/in afterwards
@@ -35,43 +69,57 @@ sudo usermod -aG libvirt "$USER"        # log out/in afterwards
 
 - KVM must be available (`ls /dev/kvm`).
 - `xorriso` (or `mkisofs`) is needed for Packer's `cd_content` cloud-init seed ISO.
+- `ansible-core` runs on the host; Vagrant's `ansible` provisioner calls `ansible-playbook`.
 
 Check the host with the readiness build:
 
 ```sh
-make build LAB=cert-lab TEMPLATE=qemu-readiness.pkr.hcl
+make readiness
 ```
 
 ## Quick start: cert-lab
 
 ```sh
-make build   LAB=cert-lab TEMPLATE=rocky8-vagrant-box.pkr.hcl  # -> cert-lab/rocky-8.10-libvirt.box
-make box-add LAB=cert-lab BOX_FILE=rocky-8.10-libvirt.box BOX_NAME=local/rocky-8.10
+make box     BOX=rocky-8   # -> boxes/rocky-8-libvirt.box
+make box-add BOX=rocky-8   # -> Vagrant box local/rocky-8
 make up      LAB=cert-lab
 make ssh     LAB=cert-lab VM=issuing-ca
 make destroy LAB=cert-lab
 ```
 
-`LAB` defaults to `cert-lab`, so it can be omitted for that lab. Run `make help` for every target.
+`BOX` defaults to `rocky-8` and `LAB` to `cert-lab`. Run `make help` for every target and
+`make list` for the boxes and labs available.
 
 ## Make targets
 
 | Group | Target | What it does |
 | --- | --- | --- |
 | Repo | `setup` / `run` / `remove` | Install, run, or remove pre-commit hooks |
-| Packer | `fmt` | `packer fmt -recursive .` |
-| Packer | `init` / `validate` | Install plugins / validate every `*.pkr.hcl` and `Vagrantfile` |
-| Packer | `build` | `packer build $(TEMPLATE)` inside `$(LAB)` |
-| Packer | `box-add` / `box-list` | Import a built box into Vagrant / list boxes |
-| Vagrant | `up` / `halt` / `provision` / `status` / `ssh` / `destroy` | Run the matching `vagrant` command in `$(LAB)`, optionally for one `VM` |
-| Vagrant | `clean` | Delete Packer `output-*` dirs, caches, and manifests in `$(LAB)` (keeps `.box` files) |
+| Packer | `fmt` | `packer fmt -recursive packer/` |
+| Packer | `init` / `validate` | Install plugins / validate every box var file, the readiness test, each `Vagrantfile`, and each lab playbook |
+| Packer | `readiness` | Smoke-test Packer + QEMU/KVM on this host |
+| Packer | `box` / `box-add` | Build `boxes/$(BOX)-libvirt.box` / import it as `local/$(BOX)` |
+| Packer | `boxes` | Build and import every box |
+| Packer | `list` | Show buildable boxes, imported boxes, and labs |
+| Vagrant | `up` / `halt` / `provision` / `status` / `ssh` / `destroy` | Run the matching `vagrant` command in `labs/$(LAB)`, optionally for one `VM` |
+| Vagrant | `clean` | Delete Packer build output (keeps `boxes/*.box`) |
+
+## Adding a lab
+
+1. `mkdir -p labs/<name>/provision` and add a `Vagrantfile` (copy `labs/cert-lab/Vagrantfile`
+   as a starting point; give it its own libvirt network name and subnet).
+2. Write `provision/site.yml`; reuse `lab_base` and put anything shared across labs in
+   `ansible/roles/`. Point the Vagrant provisioner at `../../ansible.cfg`.
+3. Add a `README.md` with the lab's goals, topology, and exercises.
+4. `make validate`, then `make up LAB=<name>`.
 
 ## Artifacts
 
-Boxes, disk images, Packer output directories, and `.vagrant/` state are all gitignored and
-blocked by the `check-added-large-files` pre-commit hook. They stay on the local disk only.
+Boxes, disk images, Packer output, and `.vagrant/` state are all gitignored and blocked by the
+`check-added-large-files` pre-commit hook. They stay on the local disk only.
 
 ## CI/CD
 
-`.github/workflows/validate.yml` runs pre-commit and `make validate` on every push and PR to
-`main`. Actual builds need KVM and multi-GB downloads, so they run locally, not in CI.
+`.github/workflows/validate.yml` runs pre-commit (incl. ansible-lint, actionlint, gitleaks,
+shellcheck, `packer fmt`) and `make validate` on every push and PR to `main`. Actual builds need
+KVM and multi-GB downloads, so they run locally, not in CI.

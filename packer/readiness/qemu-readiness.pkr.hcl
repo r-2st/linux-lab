@@ -5,10 +5,9 @@
 # seeds it with cloud-init via a generated ISO (exercises xorriso/mkisofs),
 # connects over SSH, runs a few checks, and shuts down cleanly.
 #
-# Usage:
-#   packer init qemu-readiness.pkr.hcl
-#   packer validate qemu-readiness.pkr.hcl
-#   packer build qemu-readiness.pkr.hcl
+# Usage (from the repo root; `make readiness` wraps this):
+#   packer init  packer/readiness/qemu-readiness.pkr.hcl
+#   packer build packer/readiness/qemu-readiness.pkr.hcl
 #
 # Expected runtime with KVM: ~2-4 minutes (mostly the image download).
 
@@ -87,7 +86,7 @@ source "qemu" "readiness" {
   shutdown_command = "sudo shutdown -P now"
 
   # --- Output ---
-  output_directory = "output-readiness-${local.build_ts}"
+  output_directory = "${path.root}/../output/readiness-${local.build_ts}"
   vm_name          = "readiness.qcow2"
 }
 
@@ -115,7 +114,7 @@ build {
   }
 
   post-processor "manifest" {
-    output     = "readiness-manifest.json"
+    output     = "${path.root}/../output/readiness-manifest.json"
     strip_path = true
   }
 }
