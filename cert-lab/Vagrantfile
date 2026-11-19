@@ -1,0 +1,51 @@
+# Vagrantfile — two-tier PKI lab on the Packer-built Rocky Linux 8.10 box
+#
+#   root-ca     offline root CA (keep halted except when signing)
+#   issuing-ca  intermediate / issuing CA
+#   client      web server that requests certs and trusts the chain
+#
+# All three share a private libvirt network (ca-lab) with static IPs and
+# /etc/hosts entries, so they can reach each other as <name>.lab.test.
+
+BOX    = "local/rocky-8.10"
+DOMAIN = "lab.test" # .test is reserved for testing (RFC 2606), never real DNS
+
+NODES = {
+  "root-ca"    => "192.168.150.10",
+  "issuing-ca" => "192.168.150.11",
+  "client"     => "192.168.150.12",
+}
+
+HOSTS = NODES.map { |name, ip| "#{ip} #{name}.#{DOMAIN} #{name}" }.join("\n")
+
+Vagrant.configure("2") do |config|
+  config.vm.box = BOX
+
+  config.ssh.username = "vagrant"
+  config.ssh.password = "vagrant"
+
+  config.vm.synced_folder ".", "/vagrant", disabled: true
+
+  config.vm.provider :libvirt do |lv|
+    lv.uri    = "qemu:///system"
+    lv.driver = "kvm"
+    lv.cpus   = 1
+    lv.memory = 1024
+  end
+
+  NODES.each do |name, ip|
+    config.vm.define name do |node|
+      node.vm.hostname = "#{name}.#{DOMAIN}"
+      node.vm.network :private_network,
+        ip: ip,
+        libvirt__network_name: "ca-lab"
+
+      node.vm.provision "shell", inline: <<-SHELL
+        # Replace any lab.test lines (incl. Vagrant's 127.0.1.1 entry) with the real IPs
+        sed -i '/#{DOMAIN}/d' /etc/hosts
+        echo "#{HOSTS}" >> /etc/hosts
+        rm -f /etc/motd.d/cockpit
+      SHELL
+    end
+  end
+end

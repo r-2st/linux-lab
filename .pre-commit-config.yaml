@@ -1,0 +1,42 @@
+# See https://pre-commit.com for more information
+# See https://pre-commit.com/hooks.html for more hooks
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v5.0.0
+    hooks:
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
+      - id: mixed-line-ending
+        args: [--fix=lf]
+      - id: check-yaml
+      - id: check-json
+      - id: check-merge-conflict
+      - id: check-executables-have-shebangs
+      - id: check-shebang-scripts-are-executable
+      # Boxes and disk images are multi-GB; never let one slip into git.
+      - id: check-added-large-files
+        args: [--maxkb=1024]
+      # Catches Vagrant/Packer SSH keys accidentally staged.
+      - id: detect-private-key
+  - repo: https://github.com/igorshubovych/markdownlint-cli
+    rev: v0.41.0
+    hooks:
+      - id: markdownlint
+        args: [--fix, --disable, MD013]
+  - repo: https://github.com/shellcheck-py/shellcheck-py
+    rev: v0.10.0.1
+    hooks:
+      - id: shellcheck
+  # Local hooks use the packer/ruby already installed on the host.
+  - repo: local
+    hooks:
+      - id: packer-fmt
+        name: packer fmt
+        entry: bash -c 'rc=0; for f in "$@"; do packer fmt "$f" >/dev/null || rc=1; done; exit $rc' --
+        language: system
+        files: \.pkr\.hcl$|\.pkrvars\.hcl$
+      - id: vagrantfile-syntax
+        name: Vagrantfile syntax (ruby -c)
+        entry: bash -c 'rc=0; for f in "$@"; do ruby -c "$f" >/dev/null || rc=1; done; exit $rc' --
+        language: system
+        files: (^|/)Vagrantfile$
