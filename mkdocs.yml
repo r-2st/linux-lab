@@ -1,4 +1,5 @@
-# MkDocs site for linux-lab. Preview: `make docs`; build: `make docs-build` (-> site/).
+# Docs site for linux-lab, built with Zensical (reads this MkDocs-format config).
+# Preview: `make docs`; build: `make docs-build` (-> site/). Deployed to GitHub Pages from main.
 site_name: linux-lab
 site_description: Linux distro labs built with Packer, run with Vagrant, configured with Ansible.
 site_url: https://r-2st.github.io/linux-lab/
@@ -48,9 +49,14 @@ markdown_extensions:
   - pymdownx.snippets:
       base_path: ["."]
       check_paths: true
-  # ```mermaid blocks render as diagrams (Material loads mermaid.js in the browser).
+  # ```mermaid blocks render as diagrams, using the vendored mermaid.js below.
   - pymdownx.superfences:
       custom_fences:
         - name: mermaid
           class: mermaid
           format: !!python/name:pymdownx.superfences.fence_code_format
+
+# Pinned, self-hosted mermaid.js (tools/vendor-mermaid.sh). The theme only fetches
+# mermaid from unpkg when no `mermaid` global exists, so this keeps pages CDN-free.
+extra_javascript:
+  - assets/javascripts/vendor/mermaid-12.3.0.min.js

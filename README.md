@@ -29,8 +29,10 @@ an Ansible playbook that configures them.
 │   └── cert-lab/                   # Two-tier PKI lab, see its README
 │       ├── Vagrantfile
 │       └── provision/site.yml
-├── docs/ + mkdocs.yml              # Documentation site (MkDocs + Material, Mermaid diagrams)
+├── docs/ + mkdocs.yml              # Docs site (Zensical, Mermaid diagrams, vendored mermaid.js)
+├── tools/vendor-mermaid.sh         # Pins mermaid.js into docs/ (integrity-checked)
 ├── .github/workflows/validate.yml  # CI: pre-commit + make validate + docs build
+├── .github/workflows/docs.yml      # Deploys the docs site to GitHub Pages from main
 └── Makefile                        # Entry point for everything below
 ```
 
@@ -148,8 +150,9 @@ make destroy LAB=cert-lab
 | Packer | `list` | Show buildable boxes, imported boxes, and labs |
 | Vagrant | `up` / `halt` / `provision` / `status` / `ssh` / `destroy` | Run the matching `vagrant` command in `labs/$(LAB)`, optionally for one `VM` |
 | Vagrant | `clean` | Delete Packer build output (keeps `boxes/*.box`) |
-| Docs | `docs` | Live-preview the docs site at <http://127.0.0.1:8000> |
+| Docs | `docs` | Live-preview the docs site at <http://localhost:8000> |
 | Docs | `docs-build` | Build the site into `site/` (strict: warnings fail) |
+| Docs | `vendor-mermaid` | Re-pin mermaid.js for the docs (`MERMAID_VERSION=x.y.z`) |
 <!-- --8<-- [end:make-targets] -->
 
 ## Adding a lab
@@ -179,15 +182,23 @@ virsh -c qemu:///system vol-delete --pool default <volume>
 
 ## Documentation
 
-The docs site is built with [MkDocs](https://www.mkdocs.org/) and
-[Material for MkDocs](https://squidfunk.github.io/mkdocs-material/) from `docs/` and
-`mkdocs.yml`; diagrams are [Mermaid](https://mermaid.js.org/) code blocks. Pages pull in this
+Published at <https://r-2st.github.io/linux-lab/> on every push to `main`.
+
+The site is built with [Zensical](https://zensical.org/) (the successor to Material for
+MkDocs, which reads the MkDocs-format `mkdocs.yml`) from `docs/`; diagrams are
+[Mermaid](https://mermaid.js.org/) code blocks. Pages pull in this
 README and the lab READMEs with snippets, so edit those files rather than copying text.
 
 ```sh
-make docs         # live preview at http://127.0.0.1:8000
+make docs         # live preview at http://localhost:8000
 make docs-build   # strict build into site/ (also runs in CI)
 ```
+
+mermaid.js is vendored, not loaded from a CDN: `make vendor-mermaid MERMAID_VERSION=x.y.z`
+downloads the npm tarball with curl, verifies the registry's sha512 integrity, writes
+`docs/assets/javascripts/vendor/mermaid-<version>.min.js` (plus its license and a sha256),
+and updates `mkdocs.yml`. pre-commit and gitleaks skip that directory so the file stays
+byte-identical to the verified download.
 
 ## CI/CD
 

@@ -1,0 +1,7 @@
+# gitleaks config: default rules plus repo-specific allowlists.
+[extend]
+useDefault = true
+
+[[allowlists]]
+description = "Vendored third-party JS, integrity-checked by tools/vendor-mermaid.sh (minified code trips generic-api-key)"
+paths = ['''^docs/assets/javascripts/vendor/''']

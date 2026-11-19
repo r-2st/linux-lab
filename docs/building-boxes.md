@@ -8,8 +8,8 @@ packages the disk as a vagrant-libvirt box.
 
 ```mermaid
 flowchart TB
-    vars["packer/vars/#lt;box#gt;.pkrvars.hcl<br/>name · image_url · image_checksum"]
-    tmpl["packer/vagrant-box.pkr.hcl<br/>one template for every distro"]
+    vars["packer/vars/<br/>#lt;box#gt;.pkrvars.hcl<br/>name · image_url<br/>image_checksum"]
+    tmpl["packer/<br/>vagrant-box.pkr.hcl<br/>one template<br/>for every distro"]
 
     subgraph build ["make box BOX=#lt;box#gt; — packer init + packer build"]
         direction TB

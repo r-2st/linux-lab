@@ -15,7 +15,7 @@ The `Makefile` is the entry point for everything: tooling, boxes, labs, and docs
 flowchart LR
     subgraph machine ["1 · Once per machine"]
         direction TB
-        setup["make setup<br/>uv → .venv → Galaxy → hooks"]
+        setup["make setup<br/>uv · .venv<br/>Galaxy · hooks"]
         readiness["make readiness<br/>Packer + KVM smoke test"]
         setup --> readiness
     end

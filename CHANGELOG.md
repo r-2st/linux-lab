@@ -7,6 +7,29 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+## [0.4.0] - 2026-11-19
+
+Zensical, self-hosted Mermaid, and GitHub Pages.
+
+### Added
+
+- `.github/workflows/docs.yml`: build and deploy the docs site to GitHub Pages from `main`
+  (actions pinned to commit SHAs).
+- mermaid.js 12.3.0 vendored under `docs/assets/javascripts/vendor/` and loaded via
+  `extra_javascript`, so pages never fetch it from unpkg. `tools/vendor-mermaid.sh` /
+  `make vendor-mermaid` re-pin it with sha512 verification against the npm registry.
+- `.gitleaks.toml`: default rules plus an allowlist for the vendored directory.
+
+### Changed
+
+- Docs build with Zensical 0.1.2 instead of MkDocs + Material for MkDocs (end of life
+  2027-05-05), using the same `mkdocs.yml`; `make docs` / `make docs-build` call `zensical`.
+- pre-commit excludes `docs/assets/javascripts/vendor/` so hooks cannot rewrite vendored files.
+
+### Removed
+
+- `mkdocs` and `mkdocs-material` (and 16 transitive packages) from the `docs` dependency group.
+
 ## [0.3.0] - 2026-11-19
 
 Documentation site.

@@ -20,6 +20,8 @@ BOX ?= rocky-8.10
 LAB ?= cert-lab
 # Optional single machine for vagrant targets, e.g. `make ssh VM=client`
 VM  ?=
+# mermaid.js version vendored into the docs site (make vendor-mermaid)
+MERMAID_VERSION ?= 12.3.0
 
 PACKER_TEMPLATE := packer/vagrant-box.pkr.hcl
 READINESS       := packer/readiness/qemu-readiness.pkr.hcl
@@ -36,7 +38,8 @@ UV = $$(command -v uv || echo $(HOME)/.local/bin/uv)
 export PATH := $(CURDIR)/.venv/bin:$(PATH)
 
 .PHONY: all setup install-uv sync galaxy run update remove fmt init validate readiness \
-	box box-add boxes list up halt provision status ssh destroy clean docs docs-build help
+	box box-add boxes list up halt provision status ssh destroy clean docs docs-build \
+	vendor-mermaid help
 
 all: help
 
@@ -130,11 +133,14 @@ clean: ## Remove Packer build output (keeps boxes/*.box).
 	rm -rf packer/output/ packer_cache/ crash.log
 
 ## Docs
-docs: ## Live-preview the docs site at http://127.0.0.1:8000
-	mkdocs serve
+docs: ## Live-preview the docs site at http://localhost:8000
+	zensical serve
 
 docs-build: ## Build the docs site into site/ (strict: warnings fail).
-	mkdocs build --strict
+	zensical build --strict --clean
+
+vendor-mermaid: ## Vendor a pinned mermaid.js for the docs: MERMAID_VERSION=<x.y.z>
+	tools/vendor-mermaid.sh $(MERMAID_VERSION)
 
 ## Help:
 help: ## Show this help.

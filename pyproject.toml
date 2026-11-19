@@ -15,11 +15,10 @@ dependencies = [
     "pre-commit>=4.0",
 ]
 
-# Documentation site (MkDocs + Material). Installed by default with the rest.
+# Documentation site (Zensical, which reads mkdocs.yml). Installed by default with the rest.
 [dependency-groups]
 docs = [
-    "mkdocs>=1.6",
-    "mkdocs-material>=9.8",
+    "zensical>=0.1.2",
 ]
 
 [tool.uv]
