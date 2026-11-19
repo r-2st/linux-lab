@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+## [0.5.0] - 2026-11-19
+
+cert-lab is ready to use: a full, tested walkthrough.
+
+### Changed
+
+- `labs/cert-lab/README.md`: replaced the exercise outline with a step-by-step Part 1
+  walkthrough (root CA, intermediate, server cert, trust store, nginx, revocation) using
+  `make` targets. Every step was run end to end on the `local/rocky-8.10` VMs.
+
 ## [0.4.0] - 2026-11-19
 
 Zensical, self-hosted Mermaid, and GitHub Pages.
