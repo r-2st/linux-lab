@@ -16,3 +16,8 @@ dependencies = [
 
 [tool.uv]
 package = false
+
+# PyMarkdown (pre-commit hook): markdownlint-compatible rule IDs.
+[tool.pymarkdown]
+plugins.md013.enabled = false        # line length
+plugins.md024.siblings_only = true   # Keep a Changelog repeats "### Added" etc. per release

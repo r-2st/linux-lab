@@ -83,8 +83,6 @@ On an image-based distro (Bluefin, Silverblue, Kinoite), skip `rpm-ostree` layer
 
 - KVM must be available (`ls /dev/kvm`).
 - `xorriso` (or `mkisofs`) is needed for Packer's `cd_content` cloud-init seed ISO.
-- Minimal installs may lack `libatomic`, which the Node.js that pre-commit downloads for
-  markdownlint needs.
 
 ### 2. Repo tooling (`make setup`)
 
@@ -103,6 +101,9 @@ This bootstraps everything Python-based, pinned by the repo:
 Make targets put `.venv/bin` first on `PATH`, and the Vagrantfiles do the same for the `ansible`
 provisioner, so nothing needs activating. For ad hoc commands use `uv run ansible ...` or
 `source .venv/bin/activate`.
+
+No pre-commit hook uses Node.js: linters are Python (ansible-lint, PyMarkdown, shellcheck-py)
+or Go (actionlint, gitleaks) builds. Keep it that way when adding hooks.
 
 Bump the pinned tooling with `make update` (rewrites `uv.lock` and the pre-commit hook revs),
 then review and commit the result.
@@ -174,6 +175,6 @@ virsh -c qemu:///system vol-delete --pool default <volume>
 ## CI/CD
 
 `.github/workflows/validate.yml` runs pre-commit (incl. ansible-lint, actionlint, gitleaks,
-shellcheck, `packer fmt`) and `make validate` on every push and PR to `main`, using the same
+shellcheck, PyMarkdown, `packer fmt`) and `make validate` on every push and PR to `main`, using the same
 uv-locked tooling as `make setup`. Actual builds need
 KVM and multi-GB downloads, so they run locally, not in CI.

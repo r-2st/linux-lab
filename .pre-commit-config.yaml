@@ -5,9 +5,13 @@ repos:
     rev: v6.0.0
     hooks:
       - id: trailing-whitespace
+        # The toptal macOS template's "Icon\r\r" rule needs its literal CRs.
+        exclude: ^\.gitignore$
       - id: end-of-file-fixer
       - id: mixed-line-ending
         args: [--fix=lf]
+        # The toptal macOS template's "Icon\r\r" rule needs its literal CRs.
+        exclude: ^\.gitignore$
       - id: check-yaml
       - id: check-json
       - id: check-merge-conflict
@@ -22,11 +26,11 @@ repos:
     rev: v8.30.0
     hooks:
       - id: gitleaks
-  - repo: https://github.com/igorshubovych/markdownlint-cli
-    rev: v0.50.0
+  # Pure-Python Markdown linter (no Node.js); rules configured in pyproject.toml.
+  - repo: https://github.com/jackdewinter/pymarkdown
+    rev: v0.9.42
     hooks:
-      - id: markdownlint
-        args: [--fix, --disable, MD013]
+      - id: pymarkdown
   - repo: https://github.com/shellcheck-py/shellcheck-py
     rev: v0.11.0.1-1
     hooks:
