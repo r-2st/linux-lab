@@ -1,4 +1,4 @@
-# Vagrantfile — two-tier PKI lab on the Packer-built Rocky Linux 8 box
+# Vagrantfile — two-tier PKI lab on the Packer-built Rocky Linux 8.10 box
 #
 #   root-ca     offline root CA (keep halted except when signing)
 #   issuing-ca  intermediate / issuing CA
@@ -8,7 +8,7 @@
 # /etc/hosts entries, so they can reach each other as <name>.lab.test.
 # Provisioning is Ansible (provision/site.yml) using the shared roles in ../../ansible/roles.
 
-BOX    = "local/rocky-8"
+BOX    = "local/rocky-8.10"
 DOMAIN = "lab.test" # .test is reserved for testing (RFC 2606), never real DNS
 
 NODES = {

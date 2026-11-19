@@ -15,7 +15,7 @@ WHITE  := $(shell tput -Txterm setaf 7)
 YELLOW := $(shell tput -Txterm setaf 3)
 
 # Box to build/import: a file name (minus .pkrvars.hcl) from packer/vars/
-BOX ?= rocky-8
+BOX ?= rocky-8.10
 # Lab to drive: a directory under labs/
 LAB ?= cert-lab
 # Optional single machine for vagrant targets, e.g. `make ssh VM=client`

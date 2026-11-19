@@ -12,7 +12,8 @@ Restructure into reusable boxes and self-contained labs.
 
 ### Added
 - `packer/vagrant-box.pkr.hcl`: one box template driven by `packer/vars/*.pkrvars.hcl`, with
-  boxes for Rocky 8/9/10, AlmaLinux 9/10, Debian 12/13, and Ubuntu 24.04/26.04.
+  boxes for Rocky 8.10/9.4 (pinned to the production releases)/10, AlmaLinux 9/10,
+  Debian 12/13, and Ubuntu 24.04/26.04.
 - `packer/scripts/`: network (eth0 DHCP via `net.ifnames=0`), Python for Ansible, and cleanup.
 - Ansible provisioning: shared `ansible/ansible.cfg` and `lab_base` role; cert-lab playbook.
 - `labs/cert-lab/README.md` with goals, topology, and exercises.
@@ -21,7 +22,7 @@ Restructure into reusable boxes and self-contained labs.
 
 ### Changed
 - `cert-lab/` moved to `labs/cert-lab/`; box build and readiness test moved to `packer/`.
-- cert-lab uses the `local/rocky-8` box and Ansible instead of inline shell provisioning.
+- cert-lab uses the `local/rocky-8.10` box and Ansible instead of inline shell provisioning.
 - Built boxes go to `boxes/`, Packer output to `packer/output/`.
 
 ### Fixed

@@ -5,8 +5,8 @@
 #
 # Usage (from the repo root; `make box BOX=<name>` wraps this):
 #   packer init  packer/vagrant-box.pkr.hcl
-#   packer build -var-file=packer/vars/rocky-8.pkrvars.hcl packer/vagrant-box.pkr.hcl
-#   -> boxes/rocky-8-libvirt.box
+#   packer build -var-file=packer/vars/rocky-8.10.pkrvars.hcl packer/vagrant-box.pkr.hcl
+#   -> boxes/rocky-8.10-libvirt.box
 
 packer {
   required_plugins {
@@ -23,7 +23,7 @@ packer {
 
 variable "name" {
   type        = string
-  description = "Box short name, e.g. rocky-8. Output is boxes/<name>-libvirt.box, imported as local/<name>."
+  description = "Box short name, e.g. rocky-8.10. Output is boxes/<name>-libvirt.box, imported as local/<name>."
 }
 
 variable "image_url" {

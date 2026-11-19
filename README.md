@@ -33,8 +33,8 @@ an Ansible playbook that configures them.
 
 | `BOX=` | Distro | Source image |
 | --- | --- | --- |
-| `rocky-8` | Rocky Linux 8.10 (pinned build) | GenericCloud-Base |
-| `rocky-9` | Rocky Linux 9 (latest) | GenericCloud-Base |
+| `rocky-8.10` | Rocky Linux 8.10 (pinned build) | GenericCloud-Base |
+| `rocky-9.4` | Rocky Linux 9.4 (pinned build, from the vault) | GenericCloud-Base |
 | `rocky-10` | Rocky Linux 10 (latest) | GenericCloud-Base |
 | `alma-9` | AlmaLinux 9 (latest) | GenericCloud |
 | `alma-10` | AlmaLinux 10 (latest) | GenericCloud |
@@ -49,6 +49,10 @@ Every box has:
 - DHCP on `eth0` (traditional NIC names, so it works no matter which PCI slot libvirt picks)
 - cloud-init disabled after the build, and an empty `machine-id` so each VM gets its own
 - Python 3.9+ as `python3` for Ansible (EL8 gets `python3.12`, since its 3.6 is too old)
+
+The Rocky boxes are pinned to the point releases used in production (8.10 and 9.4) and named
+after them, so a rebuild always produces the same release. The others track the latest image
+for their major version.
 
 To add a distro, drop a new `packer/vars/<box>.pkrvars.hcl` with `name`, `image_url`, and
 `image_checksum`; `make validate` and `make box BOX=<box>` pick it up automatically.
@@ -80,14 +84,14 @@ make readiness
 ## Quick start: cert-lab
 
 ```sh
-make box     BOX=rocky-8   # -> boxes/rocky-8-libvirt.box
-make box-add BOX=rocky-8   # -> Vagrant box local/rocky-8
+make box     BOX=rocky-8.10   # -> boxes/rocky-8.10-libvirt.box
+make box-add BOX=rocky-8.10   # -> Vagrant box local/rocky-8.10
 make up      LAB=cert-lab
 make ssh     LAB=cert-lab VM=issuing-ca
 make destroy LAB=cert-lab
 ```
 
-`BOX` defaults to `rocky-8` and `LAB` to `cert-lab`. Run `make help` for every target and
+`BOX` defaults to `rocky-8.10` and `LAB` to `cert-lab`. Run `make help` for every target and
 `make list` for the boxes and labs available.
 
 ## Make targets
@@ -117,6 +121,15 @@ make destroy LAB=cert-lab
 
 Boxes, disk images, Packer output, and `.vagrant/` state are all gitignored and blocked by the
 `check-added-large-files` pre-commit hook. They stay on the local disk only.
+
+vagrant-libvirt copies each imported box into the libvirt `default` storage pool, and neither
+`vagrant box remove` nor re-importing a rebuilt box deletes the old copy. Prune them once no VM
+uses them:
+
+```sh
+virsh -c qemu:///system vol-list default | grep VAGRANTSLASH
+virsh -c qemu:///system vol-delete --pool default <volume>
+```
 
 ## CI/CD
 

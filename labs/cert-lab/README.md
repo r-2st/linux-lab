@@ -19,14 +19,14 @@ the chain.
 | `issuing-ca` | 192.168.150.11 | `issuing-ca.lab.test` | Intermediate CA that signs leaf certs |
 | `client` | 192.168.150.12 | `client.lab.test` | Web server (and test client) |
 
-All three run on the `local/rocky-8` box on the private libvirt network `ca-lab`. Ansible
+All three run on the `local/rocky-8.10` box on the private libvirt network `ca-lab`. Ansible
 (`provision/site.yml`) puts every host in `/etc/hosts`. The VMs can `scp` to each other as
 `vagrant` / `vagrant`.
 
 ## Usage
 
 ```sh
-make box BOX=rocky-8 && make box-add BOX=rocky-8   # once
+make box BOX=rocky-8.10 && make box-add BOX=rocky-8.10   # once
 make up LAB=cert-lab
 make ssh LAB=cert-lab VM=root-ca
 make halt LAB=cert-lab VM=root-ca                  # "offline" the root when done signing
