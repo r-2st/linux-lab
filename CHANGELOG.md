@@ -33,8 +33,8 @@ Portable tooling bootstrap.
 - `.gitignore` regenerated from the toptal.com templates (linux, macos, windows, packer,
   vagrant, ansible, python) plus a repo-specific section; `packer/vars/*.pkrvars.hcl` is
   re-included because the packer template ignores all var files.
-- CI uses uv and the lockfile; actions pinned (`setup-packer@v3.4.0`, `setup-uv@v10.3.3`) and
-  moved off deprecated Node 20 versions.
+- CI uses uv and the lockfile; every action is pinned to a full commit SHA (release tag in a
+  trailing comment) and moved off deprecated Node 20 versions.
 
 ## [0.1.0] - 2026-11-19
 
