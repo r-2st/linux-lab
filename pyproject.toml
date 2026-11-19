@@ -1,0 +1,18 @@
+# Python tooling for this repo, managed by uv (https://docs.astral.sh/uv/).
+# Not a Python package: this just pins the CLI tools into a repo-local .venv.
+#   make setup        -> uv sync + pre-commit hooks + Galaxy content
+#   uv add <pkg>      -> add a tool;  uv lock --upgrade -> bump everything
+[project]
+name = "linux-lab"
+version = "0.2.0"
+description = "Linux distro labs built with Packer, run with Vagrant, configured with Ansible."
+readme = "README.md"
+license = "BSD-3-Clause"
+requires-python = ">=3.12"
+dependencies = [
+    "ansible-core>=2.18",
+    "pre-commit>=4.0",
+]
+
+[tool.uv]
+package = false

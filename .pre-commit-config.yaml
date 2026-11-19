@@ -39,6 +39,9 @@ repos:
     rev: v26.11.0
     hooks:
       - id: ansible-lint
+        # Upstream hardcodes a python3.X; keep it equal to .python-version so the
+        # uv-managed interpreter in .venv satisfies it on any machine.
+        language_version: python3.14
   # Local hooks use the packer/ruby already installed on the host.
   - repo: local
     hooks:

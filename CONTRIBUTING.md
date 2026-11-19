@@ -9,7 +9,9 @@ Please note we have a code of conduct, please follow it in all your interactions
 
 1. Never commit build artifacts: Packer `output-*` directories, `.box` files, disk images
    (`.qcow2`, `.iso`, ...), or `.vagrant/` state. `.gitignore` and pre-commit guard against this.
-2. Run `make run` (pre-commit) and `make validate` (Packer/Vagrantfile checks) before opening a PR.
+2. Run `make setup` once per clone, then `make run` (pre-commit) and `make validate`
+   (Packer/Vagrantfile/playbook checks) before opening a PR. Tooling changes go through
+   `pyproject.toml` / `uv.lock` (`uv add`, `make update`), not ad hoc installs.
 3. Update the README.md (and the lab's own `labs/<name>/README.md`) with details of changes to
    the interface: new labs or boxes, Make variables, required host packages, network ranges.
 4. Increase the version in `VERSION` and add an entry to `CHANGELOG.md` for the version this

@@ -6,6 +6,25 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-11-19
+
+Portable tooling bootstrap.
+
+### Added
+- `pyproject.toml`, `uv.lock`, `.python-version`: ansible-core and pre-commit pinned in a
+  repo-local `.venv` managed by uv.
+- `ansible/requirements.yml` placeholder for Galaxy roles/collections, installed under `ansible/`.
+- Make targets: `install-uv`, `sync`, `galaxy`, `update`.
+
+### Changed
+- `make setup` installs uv if needed, syncs `.venv`, installs hooks and Galaxy content; it no
+  longer runs `pre-commit autoupdate` (moved to `make update`).
+- Make targets and Vagrantfiles put `.venv/bin` first on `PATH`, so Vagrant's ansible
+  provisioner uses the pinned ansible-core.
+- ansible-lint hook pinned to the `.python-version` interpreter.
+- CI uses uv and the lockfile; actions pinned (`setup-packer@v3.4.0`, `setup-uv@v10.3.3`) and
+  moved off deprecated Node 20 versions.
+
 ## [0.1.0] - 2026-11-19
 
 Restructure into reusable boxes and self-contained labs.

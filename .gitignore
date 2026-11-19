@@ -94,6 +94,12 @@ crash.log
 ### Ansible ###
 *.retry
 .ansible/
+ansible/collections/
+ansible/galaxy_roles/
+
+### Python (uv) ###
+.venv/
+__pycache__/
 
 ### VM / disk images ###
 *.qcow2

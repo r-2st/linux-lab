@@ -19,8 +19,12 @@ an Ansible playbook that configures them.
 │   ├── readiness/                  # Smoke test for the local Packer + QEMU/KVM setup
 │   └── output/                     # Build output (gitignored)
 ├── boxes/                          # Built *.box files (gitignored)
-├── ansible.cfg                     # Shared Ansible config; roles_path = ansible/roles
-├── ansible/roles/lab_base/         # Baseline for every lab VM (/etc/hosts, banners)
+├── ansible.cfg                     # Shared Ansible config (roles + collections paths)
+├── ansible/
+│   ├── roles/lab_base/             # Baseline for every lab VM (/etc/hosts, banners)
+│   └── requirements.yml            # Galaxy roles/collections (placeholder, empty for now)
+├── pyproject.toml / uv.lock        # Pinned Python tooling: ansible-core, pre-commit
+├── .python-version                 # Python uv uses for .venv
 ├── labs/
 │   └── cert-lab/                   # Two-tier PKI lab, see its README
 │       ├── Vagrantfile
@@ -60,22 +64,52 @@ To add a distro, drop a new `packer/vars/<box>.pkrvars.hcl` with `name`, `image_
 **EL10 (Rocky/Alma 10) needs an x86-64-v3 CPU.** The Packer build passes `-cpu host`; in a
 Vagrantfile set `lv.cpu_mode = "host-passthrough"` (or `host-model`) for those boxes.
 
-## Prerequisites
+## Setup
 
-Fedora example (adjust for your distro):
+### 1. Host packages (once per machine)
+
+Packer, Vagrant, and libvirt/KVM are system-level. Fedora example (adjust for your distro):
 
 ```sh
-sudo dnf install -y @virtualization xorriso make ruby ansible-core
+sudo dnf install -y @virtualization xorriso make git ruby
 sudo dnf install -y packer vagrant      # from the HashiCorp repo
 vagrant plugin install vagrant-libvirt
 sudo usermod -aG libvirt "$USER"        # log out/in afterwards
 ```
 
+On an image-based distro (Bluefin, Silverblue, Kinoite), skip `rpm-ostree` layering: install
+`packer` and `vagrant` with Homebrew (`brew install packer vagrant`). libvirt/KVM ships in
+`bluefin-dx` (`ujust dx-group` adds you to the `libvirt` group).
+
 - KVM must be available (`ls /dev/kvm`).
 - `xorriso` (or `mkisofs`) is needed for Packer's `cd_content` cloud-init seed ISO.
-- `ansible-core` runs on the host; Vagrant's `ansible` provisioner calls `ansible-playbook`.
+- Minimal installs may lack `libatomic`, which the Node.js that pre-commit downloads for
+  markdownlint needs.
 
-Check the host with the readiness build:
+### 2. Repo tooling (`make setup`)
+
+```sh
+make setup
+```
+
+This bootstraps everything Python-based, pinned by the repo:
+
+1. installs [uv](https://docs.astral.sh/uv/) if missing (Homebrew if present, else the official installer)
+2. `uv sync --locked`: creates `.venv` with the Python from `.python-version` and the exact
+   `ansible-core` / `pre-commit` versions in `uv.lock`, downloading Python if the host lacks it
+3. installs the pre-commit git hook and all hook environments
+4. installs Galaxy content from `ansible/requirements.yml` into `ansible/` (gitignored)
+
+Make targets put `.venv/bin` first on `PATH`, and the Vagrantfiles do the same for the `ansible`
+provisioner, so nothing needs activating. For ad hoc commands use `uv run ansible ...` or
+`source .venv/bin/activate`.
+
+Bump the pinned tooling with `make update` (rewrites `uv.lock` and the pre-commit hook revs),
+then review and commit the result.
+
+### 3. Check the host
+
+Run the readiness build:
 
 ```sh
 make readiness
@@ -98,7 +132,11 @@ make destroy LAB=cert-lab
 
 | Group | Target | What it does |
 | --- | --- | --- |
-| Repo | `setup` / `run` / `remove` | Install, run, or remove pre-commit hooks |
+| Repo | `setup` | Bootstrap tooling: uv, `.venv`, pre-commit hooks, Galaxy content |
+| Repo | `install-uv` / `sync` / `galaxy` | The individual `setup` steps |
+| Repo | `run` | Run every pre-commit hook on all files |
+| Repo | `update` | Upgrade `uv.lock` and pre-commit hook revs |
+| Repo | `remove` | Uninstall hooks; delete `.venv` and Galaxy content |
 | Packer | `fmt` | `packer fmt -recursive packer/` |
 | Packer | `init` / `validate` | Install plugins / validate every box var file, the readiness test, each `Vagrantfile`, and each lab playbook |
 | Packer | `readiness` | Smoke-test Packer + QEMU/KVM on this host |
@@ -113,7 +151,9 @@ make destroy LAB=cert-lab
 1. `mkdir -p labs/<name>/provision` and add a `Vagrantfile` (copy `labs/cert-lab/Vagrantfile`
    as a starting point; give it its own libvirt network name and subnet).
 2. Write `provision/site.yml`; reuse `lab_base` and put anything shared across labs in
-   `ansible/roles/`. Point the Vagrant provisioner at `../../ansible.cfg`.
+   `ansible/roles/`. Point the Vagrant provisioner at `../../ansible.cfg`, and keep the
+   `.venv/bin` PATH lines at the top of the Vagrantfile. If the lab needs Galaxy content, add
+   it (pinned) to `ansible/requirements.yml` and run `make galaxy`.
 3. Add a `README.md` with the lab's goals, topology, and exercises.
 4. `make validate`, then `make up LAB=<name>`.
 
@@ -134,5 +174,6 @@ virsh -c qemu:///system vol-delete --pool default <volume>
 ## CI/CD
 
 `.github/workflows/validate.yml` runs pre-commit (incl. ansible-lint, actionlint, gitleaks,
-shellcheck, `packer fmt`) and `make validate` on every push and PR to `main`. Actual builds need
+shellcheck, `packer fmt`) and `make validate` on every push and PR to `main`, using the same
+uv-locked tooling as `make setup`. Actual builds need
 KVM and multi-GB downloads, so they run locally, not in CI.
