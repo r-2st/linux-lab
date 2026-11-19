@@ -1,0 +1,31 @@
+# Python tooling for this repo, managed by uv (https://docs.astral.sh/uv/).
+# Not a Python package: this just pins the CLI tools into a repo-local .venv.
+#   make setup        -> uv sync + pre-commit hooks + Galaxy content
+#   make docs         -> live-preview the MkDocs site (docs/ + mkdocs.yml)
+#   uv add <pkg>      -> add a tool;  uv lock --upgrade -> bump everything
+[project]
+name = "linux-lab"
+version = "0.2.0"
+description = "Linux distro labs built with Packer, run with Vagrant, configured with Ansible."
+readme = "README.md"
+license = "BSD-3-Clause"
+requires-python = ">=3.12"
+dependencies = [
+    "ansible-core>=2.18",
+    "pre-commit>=4.0",
+]
+
+# Documentation site (Zensical, which reads mkdocs.yml). Installed by default with the rest.
+[dependency-groups]
+docs = [
+    "zensical>=0.1.2",
+]
+
+[tool.uv]
+package = false
+default-groups = "all"
+
+# PyMarkdown (pre-commit hook): markdownlint-compatible rule IDs.
+[tool.pymarkdown]
+plugins.md013.enabled = false        # line length
+plugins.md024.siblings_only = true   # Keep a Changelog repeats "### Added" etc. per release

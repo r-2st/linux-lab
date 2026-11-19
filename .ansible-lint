@@ -1,0 +1,11 @@
+---
+profile: production
+exclude_paths:
+  - .github/
+  - .scratch-pad/
+  - .pre-commit-config.yaml
+  - packer/
+  - "**/.vagrant/"
+  - mkdocs.yml
+  - docs/
+  - site/

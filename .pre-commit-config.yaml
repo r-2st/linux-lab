@@ -1,0 +1,66 @@
+# See https://pre-commit.com for more information
+# See https://pre-commit.com/hooks.html for more hooks
+# Vendored third-party files must stay byte-identical to their verified downloads
+# (see tools/vendor-mermaid.sh and docs/assets/javascripts/vendor/mermaid.sha256).
+exclude: ^docs/assets/javascripts/vendor/
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v6.0.0
+    hooks:
+      - id: trailing-whitespace
+        # The toptal macOS template's "Icon\r\r" rule needs its literal CRs.
+        exclude: ^\.gitignore$
+      - id: end-of-file-fixer
+      - id: mixed-line-ending
+        args: [--fix=lf]
+        # The toptal macOS template's "Icon\r\r" rule needs its literal CRs.
+        exclude: ^\.gitignore$
+      - id: check-yaml
+        # Syntax-only, so mkdocs.yml's !!python/name tags (Mermaid fence) are allowed.
+        args: [--unsafe]
+      - id: check-json
+      - id: check-merge-conflict
+      - id: check-executables-have-shebangs
+      - id: check-shebang-scripts-are-executable
+      # Boxes and disk images are multi-GB; never let one slip into git.
+      - id: check-added-large-files
+        args: [--maxkb=1024]
+      # Catches Vagrant/Packer SSH keys accidentally staged.
+      - id: detect-private-key
+  - repo: https://github.com/gitleaks/gitleaks
+    rev: v8.30.0
+    hooks:
+      - id: gitleaks
+  # Pure-Python Markdown linter (no Node.js); rules configured in pyproject.toml.
+  - repo: https://github.com/jackdewinter/pymarkdown
+    rev: v0.9.42
+    hooks:
+      - id: pymarkdown
+  - repo: https://github.com/shellcheck-py/shellcheck-py
+    rev: v0.11.0.1-1
+    hooks:
+      - id: shellcheck
+  - repo: https://github.com/rhysd/actionlint
+    rev: v1.7.12
+    hooks:
+      - id: actionlint
+  - repo: https://github.com/ansible/ansible-lint
+    rev: v26.11.0
+    hooks:
+      - id: ansible-lint
+        # Upstream hardcodes a python3.X; keep it equal to .python-version so the
+        # uv-managed interpreter in .venv satisfies it on any machine.
+        language_version: python3.14
+  # Local hooks use the packer/ruby already installed on the host.
+  - repo: local
+    hooks:
+      - id: packer-fmt
+        name: packer fmt
+        entry: bash -c 'rc=0; for f in "$@"; do packer fmt "$f" >/dev/null || rc=1; done; exit $rc' --
+        language: system
+        files: \.pkr\.hcl$|\.pkrvars\.hcl$
+      - id: vagrantfile-syntax
+        name: Vagrantfile syntax (ruby -c)
+        entry: bash -c 'rc=0; for f in "$@"; do ruby -c "$f" >/dev/null || rc=1; done; exit $rc' --
+        language: system
+        files: (^|/)Vagrantfile$

@@ -1,0 +1,62 @@
+# Docs site for linux-lab, built with Zensical (reads this MkDocs-format config).
+# Preview: `make docs`; build: `make docs-build` (-> site/). Deployed to GitHub Pages from main.
+site_name: linux-lab
+site_description: Linux distro labs built with Packer, run with Vagrant, configured with Ansible.
+site_url: https://r-2st.github.io/linux-lab/
+repo_url: https://github.com/r-2st/linux-lab
+repo_name: r-2st/linux-lab
+edit_uri: edit/main/docs/
+
+theme:
+  name: material
+  features:
+    - navigation.sections
+    - navigation.top
+    - navigation.footer
+    - content.code.copy
+    - search.highlight
+  palette:
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      toggle:
+        icon: material/weather-night
+        name: Switch to dark mode
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      toggle:
+        icon: material/weather-sunny
+        name: Switch to light mode
+
+nav:
+  - Home: index.md
+  - Guides:
+      - Building boxes: building-boxes.md
+      - Using the Makefile: makefile.md
+  - Labs:
+      - cert-lab: labs/cert-lab.md
+
+markdown_extensions:
+  - admonition
+  - attr_list
+  - tables
+  - toc:
+      permalink: true
+  - pymdownx.details
+  - pymdownx.highlight
+  - pymdownx.inlinehilite
+  # Pull README sections into the site instead of duplicating them; paths are
+  # relative to the repo root. Missing files fail the build.
+  - pymdownx.snippets:
+      base_path: ["."]
+      check_paths: true
+  # ```mermaid blocks render as diagrams, using the vendored mermaid.js below.
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
+
+# Pinned, self-hosted mermaid.js (tools/vendor-mermaid.sh). The theme only fetches
+# mermaid from unpkg when no `mermaid` global exists, so this keeps pages CDN-free.
+extra_javascript:
+  - assets/javascripts/vendor/mermaid-12.3.0.min.js
