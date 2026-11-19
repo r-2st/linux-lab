@@ -7,6 +7,23 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-11-19
+
+Documentation site.
+
+### Added
+
+- MkDocs + Material docs site (`mkdocs.yml`, `docs/`), installed via a `docs` dependency group.
+- Mermaid diagrams: the Packer → Vagrant box pipeline (`docs/building-boxes.md`) and the
+  Makefile workflow (`docs/makefile.md`).
+- Home and cert-lab pages include `README.md` and `labs/cert-lab/README.md` via snippets, so
+  the READMEs stay the single source.
+- Make targets `docs` (live preview) and `docs-build` (strict build); CI `docs` job.
+
+### Changed
+
+- `check-yaml` runs with `--unsafe` (syntax only) to allow `mkdocs.yml`'s `!!python/name` tags.
+
 ## [0.2.0] - 2026-11-19
 
 Portable tooling bootstrap.

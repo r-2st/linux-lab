@@ -29,7 +29,8 @@ an Ansible playbook that configures them.
 │   └── cert-lab/                   # Two-tier PKI lab, see its README
 │       ├── Vagrantfile
 │       └── provision/site.yml
-├── .github/workflows/validate.yml  # CI: pre-commit + make validate
+├── docs/ + mkdocs.yml              # Documentation site (MkDocs + Material, Mermaid diagrams)
+├── .github/workflows/validate.yml  # CI: pre-commit + make validate + docs build
 └── Makefile                        # Entry point for everything below
 ```
 
@@ -131,6 +132,7 @@ make destroy LAB=cert-lab
 
 ## Make targets
 
+<!-- --8<-- [start:make-targets] -->
 | Group | Target | What it does |
 | --- | --- | --- |
 | Repo | `setup` | Bootstrap tooling: uv, `.venv`, pre-commit hooks, Galaxy content |
@@ -146,6 +148,9 @@ make destroy LAB=cert-lab
 | Packer | `list` | Show buildable boxes, imported boxes, and labs |
 | Vagrant | `up` / `halt` / `provision` / `status` / `ssh` / `destroy` | Run the matching `vagrant` command in `labs/$(LAB)`, optionally for one `VM` |
 | Vagrant | `clean` | Delete Packer build output (keeps `boxes/*.box`) |
+| Docs | `docs` | Live-preview the docs site at <http://127.0.0.1:8000> |
+| Docs | `docs-build` | Build the site into `site/` (strict: warnings fail) |
+<!-- --8<-- [end:make-targets] -->
 
 ## Adding a lab
 
@@ -172,9 +177,21 @@ virsh -c qemu:///system vol-list default | grep VAGRANTSLASH
 virsh -c qemu:///system vol-delete --pool default <volume>
 ```
 
+## Documentation
+
+The docs site is built with [MkDocs](https://www.mkdocs.org/) and
+[Material for MkDocs](https://squidfunk.github.io/mkdocs-material/) from `docs/` and
+`mkdocs.yml`; diagrams are [Mermaid](https://mermaid.js.org/) code blocks. Pages pull in this
+README and the lab READMEs with snippets, so edit those files rather than copying text.
+
+```sh
+make docs         # live preview at http://127.0.0.1:8000
+make docs-build   # strict build into site/ (also runs in CI)
+```
+
 ## CI/CD
 
 `.github/workflows/validate.yml` runs pre-commit (incl. ansible-lint, actionlint, gitleaks,
-shellcheck, PyMarkdown, `packer fmt`) and `make validate` on every push and PR to `main`, using the same
-uv-locked tooling as `make setup`. Actual builds need
+shellcheck, PyMarkdown, `packer fmt`), `make validate`, and a strict docs build on every push
+and PR to `main`, using the same uv-locked tooling as `make setup`. Actual builds need
 KVM and multi-GB downloads, so they run locally, not in CI.

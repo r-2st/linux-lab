@@ -13,6 +13,8 @@ repos:
         # The toptal macOS template's "Icon\r\r" rule needs its literal CRs.
         exclude: ^\.gitignore$
       - id: check-yaml
+        # Syntax-only, so mkdocs.yml's !!python/name tags (Mermaid fence) are allowed.
+        args: [--unsafe]
       - id: check-json
       - id: check-merge-conflict
       - id: check-executables-have-shebangs

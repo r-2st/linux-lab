@@ -36,7 +36,7 @@ UV = $$(command -v uv || echo $(HOME)/.local/bin/uv)
 export PATH := $(CURDIR)/.venv/bin:$(PATH)
 
 .PHONY: all setup install-uv sync galaxy run update remove fmt init validate readiness \
-	box box-add boxes list up halt provision status ssh destroy clean help
+	box box-add boxes list up halt provision status ssh destroy clean docs docs-build help
 
 all: help
 
@@ -128,6 +128,13 @@ destroy: ## Destroy the lab VMs (or VM=<name>).
 
 clean: ## Remove Packer build output (keeps boxes/*.box).
 	rm -rf packer/output/ packer_cache/ crash.log
+
+## Docs
+docs: ## Live-preview the docs site at http://127.0.0.1:8000
+	mkdocs serve
+
+docs-build: ## Build the docs site into site/ (strict: warnings fail).
+	mkdocs build --strict
 
 ## Help:
 help: ## Show this help.

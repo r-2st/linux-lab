@@ -1,6 +1,7 @@
 # Python tooling for this repo, managed by uv (https://docs.astral.sh/uv/).
 # Not a Python package: this just pins the CLI tools into a repo-local .venv.
 #   make setup        -> uv sync + pre-commit hooks + Galaxy content
+#   make docs         -> live-preview the MkDocs site (docs/ + mkdocs.yml)
 #   uv add <pkg>      -> add a tool;  uv lock --upgrade -> bump everything
 [project]
 name = "linux-lab"
@@ -14,8 +15,16 @@ dependencies = [
     "pre-commit>=4.0",
 ]
 
+# Documentation site (MkDocs + Material). Installed by default with the rest.
+[dependency-groups]
+docs = [
+    "mkdocs>=1.6",
+    "mkdocs-material>=9.8",
+]
+
 [tool.uv]
 package = false
+default-groups = "all"
 
 # PyMarkdown (pre-commit hook): markdownlint-compatible rule IDs.
 [tool.pymarkdown]
