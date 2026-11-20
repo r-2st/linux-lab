@@ -7,6 +7,26 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+## [0.6.0] - 2026-11-20
+
+cert-lab is now per release, with a Rocky 9.4 copy alongside the Rocky 8.10 original.
+
+### Added
+
+- `labs/cert-lab/rocky-9.4/`: the cert-lab on `local/rocky-9.4` (OpenSSL 3.0), on its own
+  network `ca-lab-rocky-9.4` (192.168.151.0/24) so it can run alongside the 8.10 lab.
+  The walkthrough is copied from 8.10 and hasn't yet been run end to end on 9.4.
+- `labs/cert-lab/README.md`: index of the lab's releases.
+- Docs site: one cert-lab page per release.
+
+### Changed
+
+- Labs are now `labs/<lab>/<distro>-<release>/`; the original cert-lab moved to
+  `labs/cert-lab/rocky-8.10/`. `LAB` defaults to `cert-lab/rocky-8.10`, and `make list`,
+  `make validate` look one level deeper.
+- cert-lab Vagrantfiles set a per-release libvirt `default_prefix`
+  (`cert-lab-rocky-<release>_`), so domain names can't collide between labs or releases.
+
 ## [0.5.0] - 2026-11-19
 
 cert-lab is ready to use: a full, tested walkthrough.

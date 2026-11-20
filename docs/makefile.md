@@ -6,7 +6,7 @@ The `Makefile` is the entry point for everything: tooling, boxes, labs, and docs
 | Variable | Default | Used by |
 | --- | --- | --- |
 | `BOX` | `rocky-8.10` | `box`, `box-add`: a file name from `packer/vars/` without `.pkrvars.hcl` |
-| `LAB` | `cert-lab` | Vagrant targets: a directory under `labs/` |
+| `LAB` | `cert-lab/rocky-8.10` | Vagrant targets: `<lab>/<distro>-<release>`, a directory under `labs/` |
 | `VM` | *(all)* | Vagrant targets: one machine in the lab, e.g. `VM=root-ca` |
 
 ## Workflow
@@ -63,10 +63,11 @@ pre-commit hook revs. Targets that depend on others run them first: `setup` runs
 ```sh
 make setup                              # new clone or new machine
 make box BOX=rocky-9.4 && make box-add BOX=rocky-9.4
-make up LAB=cert-lab                    # all three VMs
-make ssh LAB=cert-lab VM=issuing-ca
-make halt LAB=cert-lab VM=root-ca       # keep the root CA offline
-make destroy LAB=cert-lab && make up LAB=cert-lab   # reset the lab
+export LAB=cert-lab/rocky-9.4           # pick the lab release once per shell
+make up                                 # all three VMs
+make ssh VM=issuing-ca
+make halt VM=root-ca                    # keep the root CA offline
+make destroy && make up                 # reset the lab
 ```
 
 ## All targets

@@ -1,0 +1,6 @@
+---
+- name: Base config for all cert-lab hosts
+  hosts: all
+  become: true
+  roles:
+    - lab_base
