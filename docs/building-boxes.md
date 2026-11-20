@@ -32,10 +32,10 @@ flowchart TB
     tmpl --> build
     pp --> boxfile["boxes/#lt;box#gt;-libvirt.box"]
     boxfile -- "make box-add BOX=#lt;box#gt;" --> vbox["Vagrant box local/#lt;box#gt;"]
-    vbox -- "config.vm.box in labs/#lt;lab#gt;/Vagrantfile" --> up["make up LAB=#lt;lab#gt;"]
+    vbox -- "config.vm.box in labs/#lt;lab#gt;/#lt;release#gt;/Vagrantfile" --> up["make up LAB=#lt;lab#gt;/#lt;release#gt;"]
     up --> pool["vagrant-libvirt copies the box into<br/>the libvirt default storage pool"]
     pool --> vms["Lab VMs<br/>copy-on-write disks backed by the box"]
-    vms --> ansible["Ansible provisioner<br/>labs/#lt;lab#gt;/provision/site.yml"]
+    vms --> ansible["Ansible provisioner<br/>labs/#lt;lab#gt;/#lt;release#gt;/provision/site.yml"]
 ```
 
 ## Steps
@@ -45,7 +45,7 @@ flowchart TB
 2. Build a box: `make box BOX=rocky-8.10`. The output is `boxes/rocky-8.10-libvirt.box`;
    the intermediate qcow2 in `packer/output/` is removed by the post-processor.
 3. Import it into Vagrant: `make box-add BOX=rocky-8.10`, which registers it as `local/rocky-8.10`.
-4. Point a lab's `Vagrantfile` at `local/<box>` and run `make up LAB=<lab>`.
+4. Point a lab's `Vagrantfile` at `local/<box>` and run `make up LAB=<lab>/<release>`.
 
 `make boxes` builds and imports every box in `packer/vars/` in one go. `make list` shows what
 is buildable, what is imported, and which labs exist.

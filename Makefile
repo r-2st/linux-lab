@@ -2,7 +2,7 @@
 # linux-lab Makefile
 #
 # DESCRIPTION: Set up the repo, run pre-commit, build Vagrant boxes with Packer, and
-#              drive the Vagrant labs under labs/ (LAB=<name>).
+#              drive the Vagrant labs under labs/ (LAB=<lab>/<distro>-<release>).
 #
 # AUTHOR: Ross Thompson <7013129+r-2st@users.noreply.github.com>, Copilot
 #
@@ -16,8 +16,8 @@ YELLOW := $(shell tput -Txterm setaf 3)
 
 # Box to build/import: a file name (minus .pkrvars.hcl) from packer/vars/
 BOX ?= rocky-8.10
-# Lab to drive: a directory under labs/
-LAB ?= cert-lab
+# Lab to drive: labs/<lab>/<distro>-<release>, e.g. cert-lab/rocky-9.4
+LAB ?= cert-lab/rocky-8.10
 # Optional single machine for vagrant targets, e.g. `make ssh VM=client`
 VM  ?=
 # mermaid.js version vendored into the docs site (make vendor-mermaid)
@@ -27,8 +27,8 @@ PACKER_TEMPLATE := packer/vagrant-box.pkr.hcl
 READINESS       := packer/readiness/qemu-readiness.pkr.hcl
 BOXES           := $(basename $(basename $(notdir $(wildcard packer/vars/*.pkrvars.hcl))))
 LAB_DIR         := labs/$(LAB)
-VAGRANTFILES    := $(wildcard labs/*/Vagrantfile)
-PLAYBOOKS       := $(wildcard labs/*/provision/site.yml)
+VAGRANTFILES    := $(wildcard labs/*/*/Vagrantfile)
+PLAYBOOKS       := $(wildcard labs/*/*/provision/site.yml)
 
 # uv manages the Python tooling (ansible-core, pre-commit) in a repo-local .venv;
 # make setup installs uv first if it's missing.
@@ -107,7 +107,7 @@ boxes: ## Build and import every box in packer/vars/.
 list: ## List buildable boxes, imported boxes, and labs.
 	@echo 'Buildable (BOX=):'; for b in $(BOXES); do echo "  $$b"; done
 	@echo 'Imported into Vagrant:'; vagrant box list | sed 's/^/  /'
-	@echo 'Labs (LAB=):'; for v in $(VAGRANTFILES); do echo "  $$(basename $$(dirname $$v))"; done
+	@echo 'Labs (LAB=):'; for v in $(VAGRANTFILES); do d=$${v#labs/}; echo "  $${d%/Vagrantfile}"; done
 
 ## Vagrant
 up: ## Start the lab (or one machine with VM=<name>).
@@ -146,7 +146,7 @@ vendor-mermaid: ## Vendor a pinned mermaid.js for the docs: MERMAID_VERSION=<x.y
 help: ## Show this help.
 	@echo ''
 	@echo 'Usage:'
-	@echo '  ${YELLOW}make${RESET} ${GREEN}<target>${RESET} [BOX=<name>] [LAB=<name>] [VM=<name>]'
+	@echo '  ${YELLOW}make${RESET} ${GREEN}<target>${RESET} [BOX=<name>] [LAB=<lab>/<release>] [VM=<name>]'
 	@echo ''
 	@echo 'Targets:'
 	@awk 'BEGIN {FS = ":.*?## "} { \

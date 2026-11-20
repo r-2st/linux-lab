@@ -33,7 +33,9 @@ nav:
       - Building boxes: building-boxes.md
       - Using the Makefile: makefile.md
   - Labs:
-      - cert-lab: labs/cert-lab.md
+      - cert-lab:
+          - Rocky 8.10: labs/cert-lab/rocky-8.10.md
+          - Rocky 9.4: labs/cert-lab/rocky-9.4.md
 
 markdown_extensions:
   - admonition

@@ -5,8 +5,10 @@ run with [Vagrant](https://developer.hashicorp.com/vagrant) on libvirt/KVM, and 
 [Ansible](https://docs.ansible.com/).
 
 Packer turns an upstream cloud image into a Vagrant box (one template, one var file per distro).
-Each lab is a directory under `labs/` with a `Vagrantfile` that builds VMs from those boxes and
-an Ansible playbook that configures them.
+Each lab is a directory under `labs/`, with one subdirectory per distro release it targets
+(`labs/<lab>/<distro>-<release>/`). Each release has its own `Vagrantfile` that builds VMs from
+those boxes, an Ansible playbook that configures them, and a walkthrough written for that
+release's tool versions (for example OpenSSL 1.1.1k on Rocky 8.10 vs 3.0 on Rocky 9.4).
 
 ## Layout
 
@@ -26,9 +28,13 @@ an Ansible playbook that configures them.
 ├── pyproject.toml / uv.lock        # Pinned Python tooling: ansible-core, pre-commit
 ├── .python-version                 # Python uv uses for .venv
 ├── labs/
-│   └── cert-lab/                   # Two-tier PKI lab, see its README
-│       ├── Vagrantfile
-│       └── provision/site.yml
+│   └── cert-lab/                   # Two-tier PKI lab
+│       ├── README.md               # Index of the releases below
+│       ├── rocky-8.10/             # One directory per distro release, see its README
+│       │   ├── README.md
+│       │   ├── Vagrantfile
+│       │   └── provision/site.yml
+│       └── rocky-9.4/
 ├── docs/ + mkdocs.yml              # Docs site (Zensical, Mermaid diagrams, vendored mermaid.js)
 ├── tools/vendor-mermaid.sh         # Pins mermaid.js into docs/ (integrity-checked)
 ├── .github/workflows/validate.yml  # CI: pre-commit + make validate + docs build
@@ -124,12 +130,13 @@ make readiness
 ```sh
 make box     BOX=rocky-8.10   # -> boxes/rocky-8.10-libvirt.box
 make box-add BOX=rocky-8.10   # -> Vagrant box local/rocky-8.10
-make up      LAB=cert-lab
-make ssh     LAB=cert-lab VM=issuing-ca
-make destroy LAB=cert-lab
+make up      LAB=cert-lab/rocky-8.10
+make ssh     LAB=cert-lab/rocky-8.10 VM=issuing-ca
+make destroy LAB=cert-lab/rocky-8.10
 ```
 
-`BOX` defaults to `rocky-8.10` and `LAB` to `cert-lab`. Run `make help` for every target and
+`BOX` defaults to `rocky-8.10` and `LAB` to `cert-lab/rocky-8.10`. For the 9.4 lab, use
+`BOX=rocky-9.4` and `LAB=cert-lab/rocky-9.4` (or `export LAB=cert-lab/rocky-9.4` once per shell). Run `make help` for every target and
 `make list` for the boxes and labs available.
 
 ## Make targets
@@ -157,14 +164,15 @@ make destroy LAB=cert-lab
 
 ## Adding a lab
 
-1. `mkdir -p labs/<name>/provision` and add a `Vagrantfile` (copy `labs/cert-lab/Vagrantfile`
-   as a starting point; give it its own libvirt network name and subnet).
+1. `mkdir -p labs/<name>/<distro>-<release>/provision` and add a `Vagrantfile` there (copy
+   `labs/cert-lab/rocky-8.10/Vagrantfile` as a starting point; give it its own libvirt network
+   name, subnet, and `default_prefix`). Add another release later by copying that directory.
 2. Write `provision/site.yml`; reuse `lab_base` and put anything shared across labs in
-   `ansible/roles/`. Point the Vagrant provisioner at `../../ansible.cfg`, and keep the
+   `ansible/roles/`. Point the Vagrant provisioner at `../../../ansible.cfg`, and keep the
    `.venv/bin` PATH lines at the top of the Vagrantfile. If the lab needs Galaxy content, add
    it (pinned) to `ansible/requirements.yml` and run `make galaxy`.
 3. Add a `README.md` with the lab's goals, topology, and exercises.
-4. `make validate`, then `make up LAB=<name>`.
+4. `make validate`, then `make up LAB=<name>/<distro>-<release>`.
 
 ## Artifacts
 
